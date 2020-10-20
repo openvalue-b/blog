@@ -1,0 +1,13 @@
+baseURL = "https://zijizu.github.io/ovb-posts/"
+themesDir = "themes"
+publishDir = "docs"
+languageCode = "en-US"
+title = "OpenValue | Blog"
+theme = "openvalue-blog-theme"
+author = "authors"
+tag = "tags"
+category = "categories"
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true

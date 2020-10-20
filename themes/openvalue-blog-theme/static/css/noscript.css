@@ -1,0 +1,30 @@
+@import url(font-awesome.min.css);
+
+/* Wrapper */
+
+	#wrapper {
+		background-color: #212931;
+		background-image: url("../../static/images/overlay.png"), linear-gradient(180deg, rgba(43,52,61,1) 0%, rgba(24,48,85,1) 75%);
+		background-size: auto,								auto,														100% auto;
+		background-position: center,								center,														top center;
+		background-repeat: repeat,								no-repeat,													no-repeat;
+		background-attachment: fixed,								fixed,														fixed;
+	}
+
+		#wrapper.fade-in:before {
+			display: none;
+		}
+
+/* Intro */
+
+	body.is-preload #intro {
+		opacity: 1;
+	}
+
+		body.is-preload #intro:not(.hidden) + #header + #nav {
+			-moz-transform: none;
+			-webkit-transform: none;
+			-ms-transform: none;
+			transform: none;
+			opacity: 1;
+		}

@@ -1,0 +1,73 @@
+{{ define "main" }}
+<!-- Main -->
+<div id="main">
+    <!-- Featured Post -->
+    <article class="post featured">
+        {{ range first 1 .Site.RegularPages }}
+        <header class="major">
+            <span class="date">{{ dateFormat "Jan 02, 2006" .Date }}</span>
+            <h2><a href="{{.URL}}">{{ .Title }}</a></h2>
+        </header>
+        <figure class="image main">
+            <a href="{{.URL}}" class="image main">
+                {{ with .Params.images }}
+                <img src="{{ index . 0 }}" alt="">
+                {{ end }}
+            </a>
+            {{ with .Params.caption }}
+            <figcaption>{{ . }}</figcaption>
+            {{ end }}
+        </figure>
+        <p>{{ .Summary }}</p>
+        <span class="name">{{ range .Param "authors" }} by {{ . }}{{ end }}</span>
+        <ul class="actions special">
+            <li>
+                <a href="{{.URL}}" class="button">Read More</a>
+            </li>
+        </ul>
+        {{ end }}
+    </article>
+    <!-- Posts -->
+    <section section id="posts" class="posts">
+        {{ range after 1 .Site.RegularPages }}
+        <article>
+            <header>
+                <span class="date">{{ dateFormat "Jan 02, 2006" .Date }}</span>
+                <h2><a href="{{.URL}}">{{ .Title }}</a></h2>
+            </header>
+            <figure class="image fit">
+                <a href="{{.URL}}" class="image fit">
+                    {{ with .Params.images }}
+                    <img src="{{ index . 0 }}" alt="">
+                    {{ end }}
+                </a>
+                {{ with .Params.caption }}
+                <figcaption>{{ . }}</figcaption>
+                {{ end }}
+            </figure>
+            <p>{{ .Summary }}</p>
+            <span class="name">{{ range .Param "authors" }} by {{ . }}{{ end }}</span>
+            <ul class="actions special">
+                <li>
+                    <a href="{{.URL}}" class="button">Read More</a>
+                </li>
+            </ul>
+        </article>
+        {{ end }}
+    </section>
+    <!-- Footer -->
+    <footer>
+        <div class="pagination">
+            <!--<a href="#" class="previous">Prev</a>-->
+            <a href="index.html" class="page active">1</a>
+            <!--<a href="#" class="page">2</a>
+            <a href="#" class="page">3</a>
+            <span class="extra">&hellip;</span>
+            <a href="#" class="page">8</a>
+            <a href="#" class="page">9</a>
+            <a href="#" class="page">10</a>
+            <a href="#" class="next">Next</a>-->
+        </div>
+    </footer>
+</div>
+{{ end }}

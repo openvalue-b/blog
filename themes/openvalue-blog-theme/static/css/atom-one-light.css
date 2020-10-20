@@ -1,0 +1,97 @@
+/*
+
+Atom One Light by Daniel Gamage
+Original One Light Syntax theme from https://github.com/atom/one-light-syntax
+
+base:    #fafafa
+mono-1:  #e6ecf1
+mono-2:  #686b77
+mono-3:  #9daab6
+hue-1:   #ff0080
+hue-2:   #ff9d3d
+hue-3:   #61e3a5
+hue-4:   #71a7ff
+hue-5:   #c7a1ba
+hue-5-2: #c91243
+hue-6:   #eb4747
+hue-6-2: #fef29d
+
+*/
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  color: #e6ecf1;
+  background: #183055;
+	border-color: #0B2348;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #9daab6;
+  font-style: italic;
+}
+
+.hljs-doctag,
+.hljs-keyword,
+.hljs-formula {
+  color: #61e3a5;
+}
+
+.hljs-section,
+.hljs-name,
+.hljs-selector-tag,
+.hljs-deletion,
+.hljs-subst {
+  color: #c7a1ba;
+}
+
+.hljs-literal {
+  color: #ff0080;
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta-string {
+  color: #71a7ff;
+}
+
+.hljs-built_in,
+.hljs-class .hljs-title {
+  color: #fef29d;
+}
+
+.hljs-attr,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-type,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-number {
+  color: #eb4747;
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-title {
+  color: #ff9d3d;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+.hljs-link {
+  text-decoration: underline;
+}

@@ -1,0 +1,29 @@
+<!-- Main -->
+<div id="main">
+
+    <!-- Post -->
+    <section class="post">
+        <article>
+            <header class="major">
+                <span class="date">{{ dateFormat "Jan 02, 2006" .Date }}</span>
+            </header>
+            {{ .Content }}
+            <hr />
+            <div class="bio">
+                {{ range .Param "authors" }}
+                {{ $name := . }}
+                {{ $path := printf "/%s/%s" "authors" ($name | urlize) }}
+                {{ with $.Site.GetPage $path }}
+                <div>
+                    <img src="../../../../../images{{ $path }}.jpg" onerror="this.src='../../../../../images{{ $path }}.png'">
+                </div>
+                <div>
+                    <h1>{{ .Params.name }}</h1>
+                    <p>{{ .Params.bio }}</p>
+                </div>
+                {{ end }}
+                {{ end }}
+            </div>
+        </article>
+    </section>
+</div>

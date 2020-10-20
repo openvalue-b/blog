@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    
+    <title>OpenValue | Blog | Spring Boot: From Java Web MVC to Kotlin WebFlux</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="../../../../../css/main.css" />
+    <noscript>
+        <link rel="stylesheet" href="../../../../../css/noscript.css" />
+    </noscript>
+    <link rel="stylesheet" href="../../../../../css/atom-one-light.css">
+    <link rel="shortcut icon" type="image/png" href="../../../../../images/favicon.png" />
+</head><body class="is-preload">
+        <div id="wrapper" class="fade-in">
+<header id="header">
+    <div class="inner">
+        <div id="header-logo">
+            <img src="../../../../../images/openvalue-white.png">
+        </div>
+    </div>
+</header>
+
+
+<nav id="nav">
+    <ul class="links">
+        <li class="active">
+            <a href="../../../../../index.html">Home</a>
+        </li>
+    </ul>
+    <ul class="icons">
+        <li>
+            <a href="https://twitter.com/OpenValue" target="_blank" class="icon brands fa-twitter">
+                <span class="label">Twitter</span></a>
+        </li>
+        <li>
+            <a href="https://talks.openvalue.tech/" target="_blank" class="icon brands fa-youtube">
+                <span class="label">YouTube</span></a>
+        </li>
+    </ul>
+</nav>
+<div id="main">
+
+    
+    <section class="post">
+        <article>
+            <header class="major">
+                <span class="date">Sep 30, 2020</span>
+            </header>
+            <h1 id="from-spring-web-mvc-to-webflux">From Spring Web MVC to WebFlux</h1>
+<p>Spring Boot has been around for some time and still seems to be the most popular framework when it comes to building modern web applications.</p>
+<p>Similarly about Kotlin language. It&rsquo;s not as old as Spring framework but it&rsquo;s been highly accepted and used by many developers. To me, it&rsquo;s no surprise that people behind Spring (Pivotal) put the Kotlin language almost at the same level as Java when it comes to integration into the framework itself.</p>
+<p>Most of my projects were not super complex and I could categorize them as <strong>CRUD</strong> applications based on <strong>Spring Web MVC</strong> stack using REST APIs, JPA (Java Persitance API with Hibernate) and Liquibase as database migration tool.</p>
+<blockquote class="blue">
+<p>CRUD - acronym for Create, Read, Update, Delete operations</p>
+</blockquote>
+<h3 id="spring-web-mvc">Spring Web MVC</h3>
+<p>Spring&rsquo;s web MVC framework is request-driven, designed around a central Servlet that dispatches requests to controllers and provides functionality that facilitates the development of web application. It&rsquo;s still one of most used framework within the Spring Boot applications in the industry.</p>
+<p>Typicall code structure with Web MVC looks like the following code snippets - they come from one of my very old pet project that would allow searching for a city by its name and planing a trip from one city to another.  The purpose of this application was purely educational - I just wanted to understand a bit more <a href="https://docs.oracle.com/javaee/6/tutorial/doc/bnbpz.html">JPA</a>, <a href="https://en.wikipedia.org/wiki/Java_annotation">Annotations</a> and Spring framework itself in detail.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">
+<span style="color:#a6e22e">@RestController</span>
+<span style="color:#a6e22e">@RequestMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/api/cities&#34;</span><span style="color:#f92672">)</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CityController</span> <span style="color:#f92672">{</span>
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> CityService cityService<span style="color:#f92672">;</span>
+
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">CityController</span><span style="color:#f92672">(</span>CityService cityService<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">cityService</span> <span style="color:#f92672">=</span> cityService<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#a6e22e">@GetMapping</span>
+    <span style="color:#66d9ef">public</span> List<span style="color:#f92672">&lt;</span>City<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findAllCities</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> cityService<span style="color:#f92672">.</span><span style="color:#a6e22e">findAll</span><span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">
+<span style="color:#a6e22e">@Service</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CityService</span> <span style="color:#f92672">{</span>
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> CityRepository cityRepository<span style="color:#f92672">;</span>
+    
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">CityService</span><span style="color:#f92672">(</span>CityRepository cityRepository<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">cityRepository</span> <span style="color:#f92672">=</span> cityRepository<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    
+    <span style="color:#66d9ef">public</span> List<span style="color:#f92672">&lt;</span>City<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findAll</span><span style="color:#f92672">(){</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">cityRepository</span><span style="color:#f92672">.</span><span style="color:#a6e22e">findAll</span><span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">
+<span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">CityRepository</span> <span style="color:#66d9ef">extends</span> CrudRepository<span style="color:#f92672">&lt;</span>City<span style="color:#f92672">,</span> Long<span style="color:#f92672">&gt;</span> <span style="color:#f92672">{</span>
+<span style="color:#f92672">}</span>
+
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">
+<span style="color:#a6e22e">@Entity</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">City</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">City</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#a6e22e">@Id</span>
+    <span style="color:#a6e22e">@GeneratedValue</span>
+    <span style="color:#66d9ef">private</span> Long id<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> String name<span style="color:#f92672">;</span>
+    <span style="color:#a6e22e">@Column</span><span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;country&#34;</span><span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">private</span> String countryCode<span style="color:#f92672">;</span>
+    <span style="color:#a6e22e">@Column</span><span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;lat&#34;</span><span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">private</span> Double latitude<span style="color:#f92672">;</span>
+    <span style="color:#a6e22e">@Column</span><span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;lng&#34;</span><span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">private</span> Double longitude<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+
+</code></pre></div><p>As you can see it&rsquo;s a simple application written <strong>in imperative way</strong> in Java language. In one of my latest project I&rsquo;ve been a given a chance to develop application using <strong>Spring WebFlux</strong>, <strong>Kotlin</strong> and <strong>functional REST API endpoints</strong>. This experience made me to re-visit this old project and re-write it in a different way using the freshly acquired knowledge. To use <strong>Kotlin</strong> and define my REST API as <strong>functional endpoints</strong>.</p>
+<h3 id="spring-webflux">Spring WebFlux</h3>
+<p>Spring WebFlux is a framework based on the reactive-stack. It has been created as an alternative and at some point successor of the previous Spring Web MVC framework where the main goal was leaverage and support following features:</p>
+<div class="list-margin">
+<ul>
+<li>non-blocking approach to handle concurrency with smaller number of threads</li>
+<li>scalability</li>
+<li><strong>functional programming and functional endpoints</strong></li>
+</ul>
+</div>
+<blockquote class="blue">
+<p>Reactive programming = paradigm that allows building non-blocking (async) applications. Such applications can better handle the flow controll (back-pressure). More detailed explenation under <a href="https://spring.io/reactive">spring.io/reactive</a></p>
+</blockquote>
+<p>Both of the frameworks are still sharing some modules and can work side be side independently. Both frameworks support asynchronous and <a href="https://spring.io/blog/2016/04/19/understanding-reactive-types">reactive types</a>, but when it comes to writes to response then Web MVC is using <strong>BLOCKING</strong> approach (separate thread execution). WebFlux relies in this case on <strong>NON-BLOCKING I/O</strong> and doesn&rsquo;t requrie extra thread as its asynchronous by design (concept of event loop).</p>
+<p><img src="../images/image1.png#image-center-75" alt=""><br>
+<em>Diagram taken from WebFlux documentation</em></p>
+<h3 id="functional-rest-api-endpoints">Functional REST API endpoints</h3>
+<p>When we define functional enpdoints then the traditional concept of @RestController and @RequestMapping is replaced by <strong>RouterFunction</strong>. Since Spring version 5.2 the endpoints can be defined in Web MVC using functional approach as well.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">
+<span style="color:#a6e22e">@Bean</span>
+<span style="color:#66d9ef">public</span> RouterFunction<span style="color:#f92672">&lt;</span>ServerResponse<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findAllCities</span><span style="color:#f92672">(</span>CityService cityService<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">return</span> route<span style="color:#f92672">().</span><span style="color:#a6e22e">GET</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/api/cities&#34;</span><span style="color:#f92672">,</span> req <span style="color:#f92672">-&gt;</span> ok<span style="color:#f92672">().</span><span style="color:#a6e22e">body</span><span style="color:#f92672">(</span>cityService<span style="color:#f92672">.</span><span style="color:#a6e22e">findAll</span><span style="color:#f92672">()))</span>
+      <span style="color:#f92672">.</span><span style="color:#a6e22e">build</span><span style="color:#f92672">();</span>
+<span style="color:#f92672">}</span>
+
+</code></pre></div><p>As you can see the @RestController, @GetMapping, @RequestMapping annotations are gone and the route definition is moved now the method itself.</p>
+<p>When defining the same functional endpoint using <strong>WebFlux</strong> and <strong>Kotlin</strong> then there are 2 options how to do it</p>
+<div class="list-margin">
+<ul>
+<li>Registering the <strong>route bean object</strong> via @Bean annotation</li>
+<li>Registering the <strong>route  bean object</strong> using lambdas and bean DSL (Domain Specific Language)</li>
+</ul>
+</div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">
+@Bean
+<span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">findAllCities</span>(cityService: CityService): RouterFunction&lt;ServerResponse&gt; {
+    <span style="color:#66d9ef">return</span> route().GET(<span style="color:#e6db74">&#34;/api/cities&#34;</span>) { ok().body(cityService.findAll()) }
+            .build()
+}
+
+</code></pre></div><p>When we compare it with the Java equivalent then the Kotlin version is almost identical. Difference comes when using the Bean DSL.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">
+bean {
+    coRouter {
+        <span style="color:#66d9ef">val</span> cityHandler = CityHandler(ref())
+        GET(<span style="color:#e6db74">&#34;/api/cities&#34;</span>, cityHandler<span style="color:#f92672">::</span>findCities)
+    }
+}
+
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CityHandler</span>(<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">val</span> cityService: CityService) {
+
+    <span style="color:#66d9ef">suspend</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">findCities</span>(request: ServerRequest): ServerResponse {
+        <span style="color:#66d9ef">return</span> ServerResponse
+            .ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyAndAwait(cityServices.findAll())
+    }  
+}
+
+</code></pre></div><p>As you can see the second option is using something called <strong>coRouter{&hellip;}</strong>. This is an extension function comming from <strong>CoRouterFunctionDsl</strong> that registers the <strong>route bean</strong> object. Optionaly you can use just <strong>router{&hellip;}</strong> but <strong>coRouter</strong> supports Coroutines and enable usage of <strong>suspend</strong> functions.</p>
+<blockquote class="blue">
+<p>Coroutines = light-weight computations (thread like) used in Kotlin language to suspend the execution without blocking the thread</p>
+</blockquote>
+<p><strong>CoRouterFunctionDsl</strong> class can be very usefull if you want to define your API endpoints in more descriptive way, if your API is complex and contains nesting routes, multiple HTTP methods or supports multiple MediaTypes.</p>
+<blockquote class="blue">
+<p>What is <strong>ref()</strong>? Function allowing automatical type inference to get the required bean. Under the hood is Spring ApplicationContext called</p>
+<pre><code>
+context.getBean(T::class.java)
+
+</code></pre></blockquote>
+<blockquote class="red">
+<p>Using OpenAPI 3 (Swagger UI) to document your functional REST API might be tricky and amount of code to describe the endpoints might be 10x more then the code itself.</p>
+<p>There is no out of the box solution to document it automatically. Spring Web MVC has better support in that matter.</p>
+</blockquote>
+<p>Registering route beans (or any other beans) into your Spring application context via Bean DSL has one positive impact. It doesn&rsquo;t require direct class reflexion or CGLIB (code generation library) proxies. This is very important aspect if you know that your application will be built and delivered as <strong>Graal VM Native Image</strong>. Even very powerfull PC with lots CPU cores and memory needs quite some time to create Native Image from Java/Kotlin aplication that uses reflexion and annotations. Removing this obstacle help the build process significantly.</p>
+<h3 id="learnings">Learnings</h3>
+<p>As I mentioned at the beginning my old application was using JPA with blocking JDBC calls. This doesn&rsquo;t make much sense in combination with WebFlux. Combining WebFlux and blockin APIs in general doesn&rsquo;t bring any performance gain - it can work together but no efficiency is acheived with it as it breaks the basic paradigm of non-blocking approach. One blocking call can lock the whole application.</p>
+<p>If there is no performance or scaling issue in your application then Web MVC works in most of the cases fine. Debugging, maintaining and developing reactive applications is bit harder and learning curve is steeper.</p>
+<p>From (subjective) coding perspective I can say that defining the functional REST API endpoints with WebFlux gave me feeling that I had the code more under the controll. The code written in Kotlin was more compact and better readable in comparism to Java. Kotlin integration within the Spring Boot is very well done and there are lots of &ldquo;syntactic sugar&rdquo; functions that boost up the productiviy when writing the code.</p>
+<hr>
+<h1 id="from-jpa-to-r2dbc">From JPA to R2DBC</h1>
+<p>In previous article I&rsquo;ve mentioned that combination of of WebFlux and JPA doesn&rsquo;t make much sense as the underlying calls in JPA are done via <strong>blocking JDBC calls</strong>. In order to make my application fully reactive and fully use the potential I&rsquo;ve decided to migrate the JPA part to <strong>R2DBC</strong>.</p>
+<h3 id="r2dbc---reactive-relational-database-connectivity">R2DBC - Reactive Relational Database Connectivity</h3>
+<p>R2DBC is a specification for reactive SQL database drivers where the main focus lays on the non-blocking reactive approach.</p>
+<p>Integration of R2DBC into Spring framework has been here for a while already. First vendors' support was done mostly for the NoSQL databases (Mongo, Cassandra). Nowadays R2DBC is available for relational databases as well: <strong>MySQL</strong>, <strong>PostgreSQL</strong> and of course <strong>H2</strong> (used for the test), to name just some. Spring R2DBC is a part of the <strong>Spring Data</strong> family that makes it easy for developers to work with persistence.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">
+implementation(<span style="color:#e6db74">&#34;org.springframework.boot:spring-boot-starter-data-r2dbc&#34;</span>)
+implementation(<span style="color:#e6db74">&#34;org.liquibase:liquibase-core&#34;</span>)
+implementation(<span style="color:#e6db74">&#34;com.h2database:h2&#34;</span>)
+runtimeOnly(<span style="color:#e6db74">&#34;io.r2dbc:r2dbc-h2&#34;</span>)
+
+</code></pre></div><p>It is very easy to set a R2DBC connection up. It requires only few configuration properties, a persistence model and a repository.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">
+spring.r2dbc.url=r2dbc:h2:file:<span style="color:#75715e">///~/travel;MODE=MySQL;AUTO_SERVER=TRUE
+</span><span style="color:#75715e"></span>spring.r2dbc.username=root
+spring.r2dbc.password=pwd1
+
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">
+<span style="color:#a6e22e">@Entity</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">City</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">City</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#a6e22e">@Id</span>
+    <span style="color:#a6e22e">@GeneratedValue</span>
+    <span style="color:#66d9ef">private</span> Long id<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> String name<span style="color:#f92672">;</span>
+    <span style="color:#a6e22e">@Column</span><span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;country&#34;</span><span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">private</span> String countryCode<span style="color:#f92672">;</span>
+    <span style="color:#a6e22e">@Column</span><span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;lat&#34;</span><span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">private</span> Double latitude<span style="color:#f92672">;</span>
+    <span style="color:#a6e22e">@Column</span><span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;lng&#34;</span><span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">private</span> Double longitude<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+
+</code></pre></div><h3 id="interaction-with-database">Interaction with database</h3>
+<p>Spring Data R2DBC provides 2 basic options how to communicate with the database</p>
+<div class="list-margin">
+<ul>
+<li>Using <strong>repository</strong> pattern</li>
+<li>Using <strong>Reactive Database Client</strong></li>
+</ul>
+</div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">
+<span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">CityRepository</span> : ReactiveCrudRepository&lt;City, Long&gt; {
+
+}
+
+</code></pre></div><p>The original repository file needed basicaly no change in order to make it reactive. Only changing the inheritance from <strong>CrudRepository</strong> to <strong>ReactiveCrudRepository</strong>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">
+<span style="color:#66d9ef">val</span> connectionFactory = ConnectionFactories
+.<span style="color:#66d9ef">get</span>(<span style="color:#e6db74">&#34;r2dbc:h2:file:///~/travel;MODE=MySQL;AUTO_SERVER=TRUE&#34;</span>)
+
+<span style="color:#66d9ef">val</span> client = DatabaseClient.create(connectionFactory)
+
+<span style="color:#66d9ef">val</span> firstCity = client
+      .select()
+      .from(City<span style="color:#f92672">::</span><span style="color:#66d9ef">class</span>)
+      .fetch()
+      .first()
+
+</code></pre></div><p>For simple usecases the repository is fully sufficient solution. Reactive database client is <strong>thread-safe</strong> and once it is configured it can be used across the whole spring application as singleton instance.</p>
+<p>When more complexer SQL queries are needed then both options can be used. Either use <strong>@Query annotation</strong> in the repository or write query as parameter using the reactive database client.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">
+<span style="color:#66d9ef">data</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">City</span>(
+    <span style="color:#66d9ef">val</span> id: Long? = -<span style="color:#ae81ff">1L</span>,
+    <span style="color:#66d9ef">val</span> country: String,
+    <span style="color:#66d9ef">val</span> name: String,
+    <span style="color:#66d9ef">val</span> lat: Double,
+    <span style="color:#66d9ef">val</span> lng: Double
+)
+
+</code></pre></div><p>As you can see the R2DBC City model is already free of any annotation to compare the original JPA example. The main difference is that the attributes in the Kotlin R2DBC model must be exactly named as the columns in the city table if we want to use the default mapper implemented in Spring Data module.</p>
+<h3 id="liquibase-migration">Liquibase migration</h3>
+<p>The original application was using Liquibase tool to create the <strong>city table</strong>. Nor Liquibase nor Flyaway provides R2DBC connection drivers that would allow the migrationion in non-blocking way. At this point it doesn&rsquo;t really matter as Liquibase is executing the blocking call only once before the full Spring application context is initilized.</p>
+<pre><code>
+-- liquibase formatted sql
+-- changeset frantisek.schneider:mun-000-init-schemas
+
+create table if not exists city
+(
+    id      bigint          not null primary key auto_increment,
+    country varchar(50)     not null,
+    name    varchar(200)    not null,
+    lat     decimal(60, 30) not null,
+    lng     decimal(60, 30) not null
+);
+
+</code></pre><p>I&rsquo;ve found out 2 options how to execute the Liquibase migration (<a href="https://docs.oracle.com/cd/B14117_01/server.101/b10759/statements_1001.htm#i2099120">SQL DDL</a> script)</p>
+<div class="list-margin">
+<ul>
+<li>Using the <strong>@Configuration</strong> annotation</li>
+<li>Using <strong>custom context initialzier</strong></li>
+</ul>
+</div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">
+@Configuration
+@PropertySource(<span style="color:#e6db74">&#34;classpath:liquibase.properties&#34;</span>)
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">LiquibaseConfiguration</span> {
+
+    @Value(<span style="color:#e6db74">&#34;\${liquibase.changeLog}&#34;</span>)
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">lateinit</span> <span style="color:#66d9ef">var</span> changeLog: String
+
+    @Value(<span style="color:#e6db74">&#34;\${liquibase.defaultSchema}&#34;</span>)
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">lateinit</span> <span style="color:#66d9ef">var</span> defaultSchema: String
+
+    @Value(<span style="color:#e6db74">&#34;\${liquibase.datasource.url}&#34;</span>)
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">lateinit</span> <span style="color:#66d9ef">var</span> url: String
+
+    @Value(<span style="color:#e6db74">&#34;\${liquibase.datasource.driverClassName}&#34;</span>)
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">lateinit</span> <span style="color:#66d9ef">var</span> driverClassName: String
+
+    @Value(<span style="color:#e6db74">&#34;\${liquibase.datasource.password}&#34;</span>)
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">lateinit</span> <span style="color:#66d9ef">var</span> password: String
+
+    @Value(<span style="color:#e6db74">&#34;\${liquibase.datasource.username}&#34;</span>)
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">lateinit</span> <span style="color:#66d9ef">var</span> username: String
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">val</span> springLiquibase: SpringLiquibase = SpringLiquibase()
+
+    @PostConstruct
+    <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">initDB</span>() {
+       with(springLiquibase) {
+           changeLog = <span style="color:#66d9ef">this</span>@DatabaseSchemaMigration.changeLog
+           defaultSchema = <span style="color:#66d9ef">this</span>@DatabaseSchemaMigration.defaultSchema
+           dataSource = dataSource()
+           resourceLoader = DefaultResourceLoader()
+       }
+       springLiquibase.afterPropertiesSet()
+    }
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">dataSource</span>(): DataSource = with(DataSourceBuilder.create()) {
+        driverClassName(<span style="color:#66d9ef">this</span>@DatabaseSchemaMigration.driverClassName)
+        url(<span style="color:#66d9ef">this</span>@DatabaseSchemaMigration.url)
+        username(<span style="color:#66d9ef">this</span>@DatabaseSchemaMigration.username)
+        password(<span style="color:#66d9ef">this</span>@DatabaseSchemaMigration.password)
+        type(JdbcDataSource<span style="color:#f92672">::</span><span style="color:#66d9ef">class</span>.java)
+        build()
+    }
+}
+
+</code></pre></div><p>As you can see the whole trick is just calling the right method in the right time. This is achieved via <strong>@PostConstruct</strong> lifecycle hook <strong>annotation</strong>. Once the configuration bean was initilized then the Liquibase engine took over the control - <strong>springLiquibase.afterPropertiesSet</strong>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-kotlin" data-lang="kotlin">
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">LiquibaseConfiguration</span> :
+    ApplicationContextInitializer&lt;GenericApplicationContext&gt; {
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">lateinit</span> <span style="color:#66d9ef">var</span> propertySource: ResourcePropertySource
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">val</span> springLiquibase: SpringLiquibase = SpringLiquibase()
+
+    <span style="color:#66d9ef">override</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">initialize</span>(applicationContext: GenericApplicationContext) {
+        propertySource = ResourcePropertySource(<span style="color:#e6db74">&#34;classpath:liquibase.properties&#34;</span>)
+
+        with(springLiquibase) {
+            changeLog = propertySource.<span style="color:#66d9ef">get</span>(<span style="color:#e6db74">&#34;liquibase.changeLog&#34;</span>)
+            defaultSchema = propertySource.<span style="color:#66d9ef">get</span>(<span style="color:#e6db74">&#34;liquibase.defaultSchema&#34;</span>)
+            dataSource = dataSource()
+            resourceLoader = DefaultResourceLoader()
+        }
+
+        springLiquibase.afterPropertiesSet()
+    }
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">dataSource</span>(): DataSource = with(DataSourceBuilder.create()) {
+        driverClassName(propertySource.<span style="color:#66d9ef">get</span>(<span style="color:#e6db74">&#34;liquibase.datasource.driverClassName&#34;</span>))
+        url(propertySource.<span style="color:#66d9ef">get</span>(<span style="color:#e6db74">&#34;liquibase.datasource.url&#34;</span>))
+        username(propertySource.<span style="color:#66d9ef">get</span>(<span style="color:#e6db74">&#34;liquibase.datasource.username&#34;</span>))
+        password(propertySource.<span style="color:#66d9ef">get</span>(<span style="color:#e6db74">&#34;liquibase.datasource.password&#34;</span>))
+        type(JdbcDataSource<span style="color:#f92672">::</span><span style="color:#66d9ef">class</span>.java)
+        build()
+    }
+}
+
+<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">fun</span> <span style="color:#a6e22e">ResourcePropertySource</span>.<span style="color:#66d9ef">get</span>(name: String): String {
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.getProperty(name) <span style="color:#66d9ef">as</span> String
+}
+
+</code></pre></div><p>The second version was smaller and more readable to me. Plus it didn&rsquo;t have any annotations (which I like) so I sticked with it.</p>
+<blockquote class="red">
+<p>As you could see in the connection string URL im using H2 database engine that is persisting the data into the file in filesystem. It is very important to mention that the <strong>r2dbc-driver</strong> runs on top of internals of H2 database engine and various parts of H2 are still <strong>blocking</strong> like file and network access. In memory access and all the layers above H2 are non-blocking.</p>
+</blockquote>
+<p>At this point no more work had to be done in order to migrate the JPA to R2DBC.</p>
+<h3 id="learnings-1">Learnings</h3>
+<p>Using R2DBC together with WebFlux can be tempting as it gives certain <strong>promise of performance for free</strong>. We have always keep in mind that the usage must be justifiable. It wouldn&rsquo;t make much sense to use R2DBC if we know that concurrency aspect will be low. R2DBC performs best in high concurrency model.</p>
+<p>When comparing to JPA we have to accept the fact that lots of code must be written by the developer - custom mappings or One-To-Many/Many-To-Many relationships. I see perfect usage for applications having simple database models and where high concurrecy aspect is expected. It is still quite young technology and when it comes to speed of development (subjective point of view) JPA and ORM frameworks can outperform the R2DBC despite being sometimes criticized for its heaviness and complexness.</p>
+
+            <hr />
+            <div class="bio">
+                
+                
+                
+                
+                <div>
+                    <img src="../../../../../images/authors/fanda.jpg" onerror="this.src='../../../../../images\/authors\/fanda.png'">
+                </div>
+                <div>
+                    <h1>fanda</h1>
+                    <p></p>
+                </div>
+                
+                
+            </div>
+        </article>
+    </section>
+</div>
+<footer id="footer">
+    <section class="split">
+        <section>
+            <div>
+                <h2><a href="https://openvalue.nl/"><img src="../../../../../images/nl.png" class="flag">Utrecht</a></h2>
+                <p class="bold">
+                    Tractieweg 41, Studio N<br />
+                    3534 AP Utrecht
+                </p>
+                <p><a href="tel:+31850606886" class="icon solid fa-phone"> +31-850606886</a></p>
+                <p><a href="mailto:utrecht@openvalue.nl" class="icon regular fa-envelope"> utrecht@openvalue.nl</a></p>
+            </div>
+        </section>
+        <section>
+            <div>
+                <h2><a href="https://openvalue.nl/"><img src="../../../../../images/nl.png" class="flag">Rotterdam</a></h2>
+                <p class="bold">
+                    Jacob van Heemskercklaan 119<br />
+                    3144 DK Maassluis
+                </p>
+                <p><a href="tel:+31643896389" class="icon solid fa-phone"> +31-643896389</a></p>
+                <p><a href="mailto:rotterdam@openvalue.nl" class="icon regular fa-envelope"> rotterdam@openvalue.nl</a></p>
+            </div>
+        </section>
+    </section>
+    <section class="split">
+        <section>
+            <div>
+                <h2><a href="https://openvalue.de/"><img src="../../../../../images/de.png" class="flag">Munich</a></h2>
+                <p class="bold">
+                    Jakob-Klar-Straße 4<br />
+                    80796 Munich
+                </p>
+                <p><a href="tel:+498945214739" class="icon solid fa-phone"> +49-8945214739</a></p>
+                <p><a href="mailto:info@openvalue.de" class="icon regular fa-envelope"> info@openvalue.de</a></p>
+            </div>
+        </section>
+        <section>
+            <div>
+                <h2><a href="https://openvalue.at/"><img src="../../../../../images/at.png" class="flag">Vienna</a></h2>
+                <p class="bold">
+                    Millennium Tower<br />
+                    Handelskai 94 – 96<br />
+                    1200 Vienna, Austria
+                </p>
+                <p><a href="tel:+436642035478" class="icon solid fa-phone"> +43-6642035478</a></p>
+                <p><a href="mailto:info@openvalue.at" class="icon regular fa-envelope"> info@openvalue.at</a></p>
+            </div>
+        </section>
+    </section>
+</footer>
+
+
+<div id="copyright">
+    <ul>
+        <li>&copy; <a href="https://www.openvalue.group/" target="_blank">OpenValue</a></li>
+    </ul>
+</div></div><script src="../../../../../js/jquery.min.js"></script>
+<script src="../../../../../js/jquery.scrollex.min.js"></script>
+<script src="../../../../../js/jquery.scrolly.min.js"></script>
+<script src="../../../../../js/browser.min.js"></script>
+<script src="../../../../../js/breakpoints.min.js"></script>
+<script src="../../../../../js/util.js"></script>
+<script src="../../../../../js/main.js"></script>
+<script src="../../../../../js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script></body>
+</html>

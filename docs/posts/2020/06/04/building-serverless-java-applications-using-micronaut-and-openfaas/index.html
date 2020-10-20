@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    
+    <title>OpenValue | Blog | Building serverless Java applications using Micronaut and OpenfaaS</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="../../../../../css/main.css" />
+    <noscript>
+        <link rel="stylesheet" href="../../../../../css/noscript.css" />
+    </noscript>
+    <link rel="stylesheet" href="../../../../../css/atom-one-light.css">
+    <link rel="shortcut icon" type="image/png" href="../../../../../images/favicon.png" />
+</head><body class="is-preload">
+        <div id="wrapper" class="fade-in">
+<header id="header">
+    <div class="inner">
+        <div id="header-logo">
+            <img src="../../../../../images/openvalue-white.png">
+        </div>
+    </div>
+</header>
+
+
+<nav id="nav">
+    <ul class="links">
+        <li class="active">
+            <a href="../../../../../index.html">Home</a>
+        </li>
+    </ul>
+    <ul class="icons">
+        <li>
+            <a href="https://twitter.com/OpenValue" target="_blank" class="icon brands fa-twitter">
+                <span class="label">Twitter</span></a>
+        </li>
+        <li>
+            <a href="https://talks.openvalue.tech/" target="_blank" class="icon brands fa-youtube">
+                <span class="label">YouTube</span></a>
+        </li>
+    </ul>
+</nav>
+<div id="main">
+
+    
+    <section class="post">
+        <article>
+            <header class="major">
+                <span class="date">Jun 04, 2020</span>
+            </header>
+            <h1 id="building-serverless-java-applications-using-micronaut-and-openfaas">Building serverless Java applications using Micronaut and OpenFaaS</h1>
+<h2 id="introduction">Introduction</h2>
+<p>When working on microservices in the Java ecosystem, especially using Spring (Boot), you will notice the long start-up time that applications will have, let alone the high memory consumption they will have. The overhead of each single microservice will eventually take its costs on the system. Looking at a framework such as Micronaut could help out to reduce this overhead without loosing any developer&rsquo;s productivity. Not only &ldquo;classic&rdquo; applications can be built using Micronaut, but also serverless applications, functions, can be built and deployed on a cloud environment or on Kubernetes using OpenFaaS. Let&rsquo;s dive into it!</p>
+<p>Small side note: during this article some references and comparisons are made with Spring. Some knowledge about Spring can therefore be useful.</p>
+<h2 id="introducing-micronaut">Introducing Micronaut</h2>
+<p>Micronaut is a JVM based framework designed for building modular microservices. When you open a Micronaut project, you won&rsquo;t be surprised at first sight, it will even look and feel the same as the common Spring (Boot) projects in the Java world.</p>
+<p>However, the differences are far to be small or subtle and should be very well understood before start taking such projects into production. On the other hand, starting discovering the Micronaut world will go very smoothly and the understanding will grow along as you are hacking your way through it.</p>
+<h3 id="annotations-and-micronaut">Annotations and Micronaut</h3>
+<p>Where Spring is known to use a lot of reflection during runtime, Micronaut is doing the same work but compile time. One example is the Spring data queries, that are generated runtime. Micronaut will generate those same queries compile time minimizing the used memory at runtime.</p>
+<p>Each Bean created will be enriched compile time creating a so-called <code>BeanDefinition</code> class containing the bean&rsquo;s requirement and it&rsquo;s constructor. All these classes are processed using the <code>BeanDefinitionInjectProcessor</code>.</p>
+<p>Also, Micronaut relies on the Java EE Dependency Injection, hence beans can be annotated with <code>@Singleton</code> and can be used with <code>@Inject</code>. The lifecycle of those beans will be managed by Micronaut itself.</p>
+<h2 id="building-a-micronaut-component">Building a Micronaut component</h2>
+<p>For everything that has to do with Micronaut, a CLI (Command Line Interface) tool can be used. This can be installed by simply following the steps in the official <a href="https://docs.micronaut.io/latest/guide/index.html#buildCLI">documentation</a>.</p>
+<p>The CLI tool is a good starting point for any project using Micronaut and will generate the backbone structure of the project and some useful files for development. It does the entire scaffolding for you. For each application type a list of features can be set up to generate all the necessary configuration needed for those features.</p>
+<p>The CLI tool supports three JVM languages: Java, Kotlin and Groovy and two build tools: Maven and Gradle. In case of a Maven project a Maven wrapper will be generated as well as a pom.xml.</p>
+<p>Next to that, the CLI tool will generate a <code>Micronaut-cli.yml</code>, this will be the input for the CLI tool for any further operations and will contain the project&rsquo;s name and profile.</p>
+<p>Coming from the Spring world, you won&rsquo;t be surprised to find the following in the main/resources directory: an <code>application.yml</code>. This file contains, just as it will in a Spring application, all the configuration settings for the application.</p>
+<h2 id="lets-start">Let&rsquo;s start</h2>
+<p>During this article, we will be building the following application:</p>
+<p><img src="../images/bookstore-arch.png#image-center-50" alt=""></p>
+<p>A simple application will serve a book given an author. To do so, it will call a function that returns all the books of an author.</p>
+<h3 id="building-an-application">Building an application</h3>
+<p>In this example, the application will contain a REST endpoint to ask for a book of a particular author. This endpoint will have to a call a function to retrieve this information. This application will therefore be a http-server as well as a http-client and will be deployed on Kubernetes.</p>
+<p>Therefore the command to generate the basis of the application will be:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+mn create-app bookstore-service --build<span style="color:#f92672">=</span>Maven --lang<span style="color:#f92672">=</span>java --features<span style="color:#f92672">=</span>Kubernetes,netflix-hystrix,http-server,http-client
+
+</code></pre></div><p>Because the service calls a function, netflix-hystrix is needed. A function needs some time to start-up (warming up time). This does not mean it will take a lot of time, but the HTTP call will always take some time for sure. To avoid the function returning a HTTP response with status 500 straightaway, a retry mechanism is needed to make sure an answer is retrieved as soon as it becomes available.</p>
+<p>As the application will be deployed on Kubernetes as indicated with the feature <code>Kubernetes</code>, the <code>create-app</code> command will also generate a <code>k8s.yml</code>, which will serve as a basis for the deployment. Of course this will have to be adjusted to the requirements of the environment where it will be deployed to. This Kubernetes configuration will have a deployment and a service.</p>
+<p>By default, such an application will be running on port 8080. To change that the following property in the application.yml can be set to the preferred value:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">
+<span style="color:#f92672">micronaut</span>:
+
+  <span style="color:#f92672">server</span>:
+
+    <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8081</span>
+
+</code></pre></div><p>Now it&rsquo;s time to add an endpoint to retrieve all the books given a certain author. For that, the HTTP functionality of Micronaut will be used.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">
+<span style="color:#f92672">package</span> bookstore.service.store<span style="color:#f92672">;</span>
+
+ 
+
+<span style="color:#f92672">import</span> io.Micronaut.http.annotation.Controller<span style="color:#f92672">;</span>
+
+<span style="color:#f92672">import</span> io.Micronaut.http.annotation.Get<span style="color:#f92672">;</span>
+
+<span style="color:#f92672">import</span> io.Micronaut.http.annotation.PathVariable<span style="color:#f92672">;</span>
+
+ 
+
+<span style="color:#a6e22e">@Controller</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;books&#34;</span><span style="color:#f92672">)</span>
+
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">BookstoreController</span> <span style="color:#f92672">{</span>
+
+ 
+
+  <span style="color:#a6e22e">@Get</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/{author}&#34;</span><span style="color:#f92672">)</span>
+
+  <span style="color:#66d9ef">public</span> Book <span style="color:#a6e22e">retrieveBooksByAuthor</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Book<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;1000 new things&#34;</span><span style="color:#f92672">,</span> <span style="color:#e6db74">&#34;John Doe&#34;</span><span style="color:#f92672">);</span>
+
+  <span style="color:#f92672">}</span>
+
+ 
+
+<span style="color:#f92672">}</span>
+
+</code></pre></div><p>This will look a lot like a Spring Controller, right? Except that the annotations are used from the Micronaut package.</p>
+<p>Remarkable here is the implementation of the <code>Book</code> DTO:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">
+<span style="color:#a6e22e">@Introspected</span>
+
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Book</span> <span style="color:#66d9ef">implements</span> Serializable <span style="color:#f92672">{</span>
+
+ 
+
+  <span style="color:#66d9ef">private</span> String title<span style="color:#f92672">;</span>
+
+  <span style="color:#66d9ef">private</span> String author<span style="color:#f92672">;</span>
+
+ 
+
+  <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">Book</span><span style="color:#f92672">(</span>String title<span style="color:#f92672">,</span> String author<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+
+    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">title</span>  <span style="color:#f92672">=</span> title<span style="color:#f92672">;</span>
+
+    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">author</span> <span style="color:#f92672">=</span> author<span style="color:#f92672">;</span>
+
+  <span style="color:#f92672">}</span>
+
+ 
+
+  <span style="color:#75715e">// some getters
+</span><span style="color:#75715e"></span>
+<span style="color:#f92672">}</span>
+
+</code></pre></div><p>The <code>@Introspected</code> annotation which is needed for reflection free DTO&rsquo;s. At compile time, a check will be performed to see if all the properties can be initialized for the DTO.</p>
+<p>It is interesting to have a look at the compiled files for this object.</p>
+<h3 id="building-a-function">Building a function</h3>
+<p>A function will be built to serve data that needs to be served quickly to our application without using a lot of logic. In our example, the function will be returning a list of books given an author&rsquo;s name. Let&rsquo;s start with the most simple case:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+mn create-function get-books-by-author --build<span style="color:#f92672">=</span>Maven --features<span style="color:#f92672">=</span>openfaas
+
+</code></pre></div><p>Note: to be able to see all the features available for a function use: <code>mn create-function --help</code></p>
+<p>To make the function buildable, one AWS dependency has to be removed (in this example no AWS functionality will be used and it will return class path errors):</p>
+<p>At the time of writing this was still generated for a function running on OpenFaaS.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml">
+    <span style="color:#f92672">&lt;dependency&gt;</span>
+
+      <span style="color:#f92672">&lt;groupId&gt;</span>com.amazonaws<span style="color:#f92672">&lt;/groupId&gt;</span>
+
+      <span style="color:#f92672">&lt;artifactId&gt;</span>aws-lambda-java-log4j2<span style="color:#f92672">&lt;/artifactId&gt;</span>
+
+      <span style="color:#f92672">&lt;version&gt;</span>1.0.0<span style="color:#f92672">&lt;/version&gt;</span>
+
+      <span style="color:#f92672">&lt;scope&gt;</span>runtime<span style="color:#f92672">&lt;/scope&gt;</span>
+
+    <span style="color:#f92672">&lt;/dependency&gt;</span>
+
+</code></pre></div><p>At time of writing, the Dockerfile will still have a bug. The Dockerfile is based on the OpenJDK 8 image, but it should be based on th e OpenJDK 13 image to not encounter any runtime/compilation problems.</p>
+<p>In the following line of code in the Dockerfile, two flags have to be removed:</p>
+<p><code>ENV fprocess=&quot;java -Dcom.sun.management.jmxremote -noverify -XX:TieredStopAtLevel=1 -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -jar Handler.jar&quot;</code></p>
+<p><code>-noverify</code> and <code>-XX:+UseCGroupMemoryLimitForHeap</code> are deprecated in JDK 13 and are therefore not needed. The line of code will then become:</p>
+<p>`ENV fprocess=&ldquo;java -Dcom.sun.management.jmxremote -XX:TieredStopAtLevel=1 -XX:+UnlockExperimentalVMOptions -jar Handler.jar&rdquo;</p>
+<p>Next we need to add <code>log4j2.xml</code> as configuration of the log4 logging.</p>
+<p>Also the following must be added for the logging in the shade jar:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml">
+<span style="color:#f92672">&lt;transformer</span> <span style="color:#a6e22e">implementation=</span><span style="color:#e6db74">&#34;org.apache.maven.plugins.shade.resource.ManifestResourceTransformer&#34;</span><span style="color:#f92672">&gt;</span>
+
+  <span style="color:#f92672">&lt;mainClass&gt;</span>${exec.mainClass}<span style="color:#f92672">&lt;/mainClass&gt;</span>
+
+  <span style="color:#f92672">&lt;manifestEntries&gt;</span>
+
+    <span style="color:#f92672">&lt;Multi-Release&gt;</span>true<span style="color:#f92672">&lt;/Multi-Release&gt;</span>
+
+  <span style="color:#f92672">&lt;/manifestEntries&gt;</span>
+
+<span style="color:#f92672">&lt;/transformer&gt;</span>
+
+</code></pre></div><p>Now, for convenience, the logging level will only be set to ERROR, by changing the fprocess command in the Dockerfile a bit more:</p>
+<p><code>ENV fprocess=&quot;java -Dorg.apache.logging.log4j.simplelog.StatusLogger.level=ERROR -Dcom.sun.management.jmxremote -XX:TieredStopAtLevel=1 -XX:+UnlockExperimentalVMOptions -jar Handler.jar&quot;</code></p>
+<p>To keep the function as simple as possible, the function class won&rsquo;t be extending the <code>FunctionInitializer</code></p>
+<h2 id="deploying-micronaut">Deploying Micronaut</h2>
+<p>Now an environment is needed to deploy this. OpenFaaS is a good option for deploying an application or function on Kubernetes. For a Micronaut function, OpenFaaS will deploy a pod. On this pod nothing will be running until the endpoint is called. At that point an application will start running and return the endpoint call.</p>
+<h3 id="installing-openfaas">Installing OpenFaaS</h3>
+<p>Installing OpenFaaS is quite easy and should not take too much time. When working on my project, I wanted to explore the Micronaut functions. However, deploying to AWS was not an option and my curiosity was triggered by OpenFaaS. Installing OpenFaaS locally is quite easy.</p>
+<p>OpenFaaS makes it easy to deploy functions and applications on an existing Kubernetes cluster.</p>
+<p>Instructions for the installation are listed <a href="https://docs.openfaas.com/deployment/Kubernetes/">here</a>.</p>
+<p>In a nutshell, start with installing the CLI:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+brew install faas-cli
+
+</code></pre></div><p>Then before installing OpenFaaS, install Arkade (which will be fastest option to install OpenFaaS later on):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+curl -SLsf https://dl.get-arkade.dev/ | sudo sh
+
+</code></pre></div><p>Now you can finally install OpenFaaS on your local Kubernetes cluster:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+arkade install openfaas
+
+</code></pre></div><p>Now the trick is not to ignore all the lines of logging that will come out of the installation, there are some useful instructions there that will help you finish the installation. To start with checking whether all the deployments where successful:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+kubectl -n openfaas get deployments -l <span style="color:#e6db74">&#34;release=openfaas, app=openfaas&#34;</span>
+
+</code></pre></div><p>The successful deployments should be:</p>
+<pre><code>
+NAME                READY   UP-TO-DATE   AVAILABLE   AGE
+
+alertmanager        1/1     1            1           6d21h
+
+basic-auth-plugin   1/1     1            1           6d21h
+
+faas-idler          1/1     1            1           6d21h
+
+gateway             1/1     1            1           6d21h
+
+nats                1/1     1            1           6d21h
+
+prometheus          1/1     1            1           6d21h
+
+queue-worker        1/1     1            1           6d21h
+
+</code></pre><p>Now one final step has to be taken. The Gateway used by OpenFaaS should be forwarded:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+kubectl -n openfaas rollout status deploy/gateway
+
+kubectl -n openfaas port-foward svc/gateway 8080:8080
+
+</code></pre></div><p>Do not forget setup the login:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+PASSWORD<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl get secret -n openfaas basic-auth -o jsonpath<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{.data.basic-auth-password}&#34;</span> | base64 --decode; echo<span style="color:#66d9ef">)</span>
+
+echo -n $PASSWORD | faas-cli login --username admin --password-stdin
+
+</code></pre></div><p>OpenFaaS should now be all up and running!</p>
+<h3 id="deploying-a-micronaut-function">Deploying a Micronaut function</h3>
+<p>Testing the function on OpenFaaS:</p>
+<p>OpenFaaS requires a registry to push and deploy the function. For local development, the registry could be started within a docker container:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+sudo docker run -d -p 5000:5000 --name registry registry:2
+
+</code></pre></div><p>Looking more closely to the <code>function.yml</code>, after the provider description (which will only specify the endpoint of the gateway), the function is described as a docker image that would have to be ran:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">
+<span style="color:#f92672">provider</span>:
+
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">openfaas</span>
+
+  <span style="color:#f92672">gateway</span>: <span style="color:#ae81ff">http://127.0.0.1:8080</span>
+
+<span style="color:#f92672">functions</span>:
+
+  <span style="color:#f92672">get-books-by-author</span>:
+
+    <span style="color:#f92672">lang</span>: <span style="color:#ae81ff">dockerfile</span>
+
+    <span style="color:#f92672">handler</span>: <span style="color:#ae81ff">.</span>
+
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">localhost:5000/get-books-by-author:latest</span>
+
+</code></pre></div><p>The image in this example is prefixed with <code>localhost:5000/</code> which is the local registry that was launched by the previous bash command.</p>
+<p>Now let&rsquo;s use the magical commands of the <code>faas-cli</code> to deploy and run the function:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+faas-cli build -f <span style="color:#66d9ef">function</span>.yml
+
+faas-cli push -f <span style="color:#66d9ef">function</span>.yml
+
+faas-cli deploy -f <span style="color:#66d9ef">function</span>.yml
+
+</code></pre></div><p>Now call the function through the OpenFaaS Gateway:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+curl -X GET http://127.0.0.1:8080/function/get-books-by-author -H <span style="color:#e6db74">&#39;Content-Type: application/json&#39;</span> -d <span style="color:#e6db74">$&#39;{&#34;name&#34;:&#34;Piet&#34;}&#39;</span>
+
+</code></pre></div><p>To verify that the function is running:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+kubectl -n openfaas-fn get pods
+
+</code></pre></div><p>Now this function has a running pod, but it is not running as such. The pod will be put up as a placeholder for the function. Once a REST call is made to the endpoint, the application will be started. This is done with <a href="https://docs.openfaas.com/architecture/watchdog/">Watchdog</a>.</p>
+<h1 id="resources">Resources</h1>
+<p>Everything in this article was developed with the following environment:</p>
+<div class="list-margin">
+<ul>
+<li>Mac OSX  Catalina</li>
+<li>Docker Desktop (Engine v.19.03.5, Kubernetes v1.15.5)</li>
+<li>OpenJDK 13.0.2</li>
+</ul>
+</div>
+<p>References:</p>
+<div class="list-margin">
+<ul>
+<li><a href="http://www.micronaut.io">Official Micronaut documentation</a></li>
+<li><a href="https://www.openfaas.com/">Official OpenFaaS documentation</a></li>
+<li><a href="https://docs.micronaut.io/latest/api/io/micronaut/inject/BeanDefinition.html">Java Documentation on Micronaut&rsquo;s BeanDefinition class</a></li>
+</ul>
+</div>
+            <hr />
+            <div class="bio">
+                
+                
+                
+                
+                <div>
+                    <img src="../../../../../images/authors/paulien-van-alst.jpg" onerror="this.src='../../../../../images\/authors\/paulien-van-alst.png'">
+                </div>
+                <div>
+                    <h1>Paulien van Alst</h1>
+                    <p>Paulien is a passionate software engineer in love with readable, reliable and testable code, independent on the language or technology used. At OpenValue she works on helping companies setting up better software. Lately, she is giving Kotlin workshops and presentations about migrating from Java to Kotlin. In her free time, she likes to sport, cycling and swimming in particular.</p>
+                </div>
+                
+                
+            </div>
+        </article>
+    </section>
+</div>
+<footer id="footer">
+    <section class="split">
+        <section>
+            <div>
+                <h2><a href="https://openvalue.nl/"><img src="../../../../../images/nl.png" class="flag">Utrecht</a></h2>
+                <p class="bold">
+                    Tractieweg 41, Studio N<br />
+                    3534 AP Utrecht
+                </p>
+                <p><a href="tel:+31850606886" class="icon solid fa-phone"> +31-850606886</a></p>
+                <p><a href="mailto:utrecht@openvalue.nl" class="icon regular fa-envelope"> utrecht@openvalue.nl</a></p>
+            </div>
+        </section>
+        <section>
+            <div>
+                <h2><a href="https://openvalue.nl/"><img src="../../../../../images/nl.png" class="flag">Rotterdam</a></h2>
+                <p class="bold">
+                    Jacob van Heemskercklaan 119<br />
+                    3144 DK Maassluis
+                </p>
+                <p><a href="tel:+31643896389" class="icon solid fa-phone"> +31-643896389</a></p>
+                <p><a href="mailto:rotterdam@openvalue.nl" class="icon regular fa-envelope"> rotterdam@openvalue.nl</a></p>
+            </div>
+        </section>
+    </section>
+    <section class="split">
+        <section>
+            <div>
+                <h2><a href="https://openvalue.de/"><img src="../../../../../images/de.png" class="flag">Munich</a></h2>
+                <p class="bold">
+                    Jakob-Klar-Straße 4<br />
+                    80796 Munich
+                </p>
+                <p><a href="tel:+498945214739" class="icon solid fa-phone"> +49-8945214739</a></p>
+                <p><a href="mailto:info@openvalue.de" class="icon regular fa-envelope"> info@openvalue.de</a></p>
+            </div>
+        </section>
+        <section>
+            <div>
+                <h2><a href="https://openvalue.at/"><img src="../../../../../images/at.png" class="flag">Vienna</a></h2>
+                <p class="bold">
+                    Millennium Tower<br />
+                    Handelskai 94 – 96<br />
+                    1200 Vienna, Austria
+                </p>
+                <p><a href="tel:+436642035478" class="icon solid fa-phone"> +43-6642035478</a></p>
+                <p><a href="mailto:info@openvalue.at" class="icon regular fa-envelope"> info@openvalue.at</a></p>
+            </div>
+        </section>
+    </section>
+</footer>
+
+
+<div id="copyright">
+    <ul>
+        <li>&copy; <a href="https://www.openvalue.group/" target="_blank">OpenValue</a></li>
+    </ul>
+</div></div><script src="../../../../../js/jquery.min.js"></script>
+<script src="../../../../../js/jquery.scrollex.min.js"></script>
+<script src="../../../../../js/jquery.scrolly.min.js"></script>
+<script src="../../../../../js/browser.min.js"></script>
+<script src="../../../../../js/breakpoints.min.js"></script>
+<script src="../../../../../js/util.js"></script>
+<script src="../../../../../js/main.js"></script>
+<script src="../../../../../js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script></body>
+</html>
