@@ -2,44 +2,44 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on OpenValue | Blog</title>
-    <link>https://zijizu.github.io/ovb-posts/posts/</link>
+    <link>https://openvalue-b.github.io/blog/posts/</link>
     <description>Recent content in Posts on OpenValue | Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Wed, 30 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://zijizu.github.io/ovb-posts/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 30 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://openvalue-b.github.io/blog/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Spring Boot: From Java Web MVC to Kotlin WebFlux</title>
-      <link>https://zijizu.github.io/ovb-posts/posts/2020/09/30/spring-boot-from-java-web-mvc-to-kotlin-webflux/</link>
+      <link>https://openvalue-b.github.io/blog/posts/2020/09/30/spring-boot-from-java-web-mvc-to-kotlin-webflux/</link>
       <pubDate>Wed, 30 Sep 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://zijizu.github.io/ovb-posts/posts/2020/09/30/spring-boot-from-java-web-mvc-to-kotlin-webflux/</guid>
+      <guid>https://openvalue-b.github.io/blog/posts/2020/09/30/spring-boot-from-java-web-mvc-to-kotlin-webflux/</guid>
       <description>Spring Boot has been around for some time and still seems to be the most popular framework when it comes to building modern web applications. Similarly about Kotlin language. It’s not as old as Spring framework but it’s been highly accepted and used by many developers. To me, it’s no surprise that people behind Spring (Pivotal) put the Kotlin language almost at the same level as Java when it comes to integration into the framework itself.</description>
     </item>
     
     <item>
       <title>Building serverless Java applications using Micronaut and OpenfaaS</title>
-      <link>https://zijizu.github.io/ovb-posts/posts/2020/06/04/building-serverless-java-applications-using-micronaut-and-openfaas/</link>
+      <link>https://openvalue-b.github.io/blog/posts/2020/06/04/building-serverless-java-applications-using-micronaut-and-openfaas/</link>
       <pubDate>Thu, 04 Jun 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://zijizu.github.io/ovb-posts/posts/2020/06/04/building-serverless-java-applications-using-micronaut-and-openfaas/</guid>
+      <guid>https://openvalue-b.github.io/blog/posts/2020/06/04/building-serverless-java-applications-using-micronaut-and-openfaas/</guid>
       <description>When working on microservices in the Java ecosystem, especially using Spring (Boot), you will notice the long start-up time that applications will have, let alone the high memory consumption they will have. The overhead of each single microservice will eventually take its costs on the system. Looking at a framework such as Micronaut could help out to reduce this overhead without loosing any developer&amp;rsquo;s productivity. Not only &amp;ldquo;classic&amp;rdquo; applications can be built using Micronaut, but also serverless applications, functions, can be built and deployed on a cloud environment or on Kubernetes using OpenFaaS. Let&amp;rsquo;s dive into it!</description>
     </item>
     
     <item>
       <title>JSR-381: A Standard Java API for Visual Recognition using Machine Learning</title>
-      <link>https://zijizu.github.io/ovb-posts/posts/2020/05/28/jsr-381-a-standard-java-api-for-visual-recognition-using-machine-learning/</link>
+      <link>https://openvalue-b.github.io/blog/posts/2020/05/28/jsr-381-a-standard-java-api-for-visual-recognition-using-machine-learning/</link>
       <pubDate>Thu, 28 May 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://zijizu.github.io/ovb-posts/posts/2020/05/28/jsr-381-a-standard-java-api-for-visual-recognition-using-machine-learning/</guid>
+      <guid>https://openvalue-b.github.io/blog/posts/2020/05/28/jsr-381-a-standard-java-api-for-visual-recognition-using-machine-learning/</guid>
       <description>This article will cover a deep learning introduction and create a ML model that will be able to classify Star Wars aircrafts in just a few lines of code using Java Specification Request #JSR-381 (“JSR-381”).</description>
     </item>
     
     <item>
       <title>Why we gave 50&#43; tech talks at 19 conferences</title>
-      <link>https://zijizu.github.io/ovb-posts/posts/2020/05/21/why-we-gave-50&#43;-tech-talks-at-19-conferences/</link>
+      <link>https://openvalue-b.github.io/blog/posts/2020/05/21/why-we-gave-50&#43;-tech-talks-at-19-conferences/</link>
       <pubDate>Thu, 21 May 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://zijizu.github.io/ovb-posts/posts/2020/05/21/why-we-gave-50&#43;-tech-talks-at-19-conferences/</guid>
+      <guid>https://openvalue-b.github.io/blog/posts/2020/05/21/why-we-gave-50&#43;-tech-talks-at-19-conferences/</guid>
       <description>We started OpenValue almost 2 years ago. One of the key values of our company is sharing knowledge. Next to fun and craftsmanship. This all comes together with our activities in the international Java community. I’ll explain why.</description>
     </item>
     
